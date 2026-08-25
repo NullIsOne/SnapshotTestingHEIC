@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -17,9 +17,10 @@ let package = Package(
             targets: ["SnapshotTestingHEIC"]),
     ],
     dependencies: [
-        .package(name: "swift-snapshot-testing",
-                 url: "https://github.com/pointfreeco/swift-snapshot-testing.git",
-                 from: "1.18.7"),
+        .package(
+            url: "https://github.com/NullIsOne/swift-snapshot-testing",
+            branch: "fix-precision-tolerance"
+        ),
     ],
     targets: [
         .target(
