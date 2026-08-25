@@ -29,22 +29,24 @@ func comparePixelBytes(
     byteCount: Int,
     precision: Float
 ) -> (passed: Bool, actualPrecision: Float) {
-    let threshold = Int((1 - precision) * Float(byteCount))
+    let tolerance = max(Float.ulpOfOne, 1.0 / Float(byteCount))
+    let maxPassingDifferentByteCount = Int(floor(Float(byteCount) * (1 - precision + tolerance)))
     var differentByteCount = 0
 
     for offset in 0..<byteCount {
         if oldBytes[offset] != newBytes[offset] {
             differentByteCount += 1
         }
-        // Early exit optimization - stop comparing once we know the result
-        if differentByteCount > threshold {
+        // Early exit if failure is guaranteed even with tolerance
+        if differentByteCount > maxPassingDifferentByteCount {
             let actualPrecision = 1 - Float(differentByteCount) / Float(byteCount)
             return (false, actualPrecision)
         }
     }
 
     let actualPrecision = 1 - Float(differentByteCount) / Float(byteCount)
-    return (differentByteCount <= threshold, actualPrecision)
+    let passed = actualPrecision + tolerance >= precision
+    return (passed, actualPrecision)
 }
 
 // MARK: - CGContext Creation

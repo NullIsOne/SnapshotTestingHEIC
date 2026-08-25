@@ -542,6 +542,21 @@ final class SnapshotTestingHEICTests: XCTestCase {
         XCTAssertFalse(passed)
     }
 
+    func test_comparePixelBytes_passesWithinOneByteTolerance() {
+        let byteCount = 1_000_000
+        let integerThreshold = Int((1 - 0.96) * Float(byteCount))
+        let bytes1 = [UInt8](repeating: 0, count: byteCount)
+        var bytes2 = [UInt8](repeating: 0, count: byteCount)
+        for index in 0 ..< integerThreshold + 1 {
+            bytes2[index] = 255
+        }
+
+        let (passed, actualPrecision) = comparePixelBytes(bytes1, bytes2, byteCount: byteCount, precision: 0.96)
+
+        XCTAssertTrue(passed)
+        XCTAssertLessThan(actualPrecision, 0.96)
+    }
+
     func test_comparePixelBytes_earlyExitOptimization() {
         // Create large arrays where early bytes differ
         let bytes1 = [UInt8](repeating: 0, count: 10000)
