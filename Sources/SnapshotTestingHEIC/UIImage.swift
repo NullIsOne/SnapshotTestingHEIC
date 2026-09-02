@@ -144,8 +144,18 @@ private func compare(
     guard let oldData = createImageContext(for: oldCgImage, data: &oldBytes)?.data else {
         return "Reference image's data could not be loaded."
     }
-    if let newContext = createImageContext(for: newCgImage), let newData = newContext.data {
+    var newBytes = [UInt8](repeating: 0, count: byteCount)
+    if let newContext = createImageContext(for: newCgImage, data: &newBytes), let newData = newContext.data {
         if memcmp(oldData, newData, byteCount) == 0 { return nil }
+        if precision < 1, perceptualPrecision >= 1 {
+            let (passed, _) = comparePixelBytes(
+                oldBytes,
+                newBytes,
+                byteCount: byteCount,
+                precision: precision
+            )
+            if passed { return nil }
+        }
     }
     var newerBytes = [UInt8](repeating: 0, count: byteCount)
 

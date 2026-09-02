@@ -13,9 +13,16 @@ let imageContextBitsPerComponent = 8
 /// Bytes per pixel for RGBA images (4 channels: R, G, B, A)
 let imageContextBytesPerPixel = 4
 
+/// Block size for optimized comparison (64KB chunks for better cache locality)
+private let comparisonBlockSize = 65536
+
 // MARK: - Pixel Comparison
 
-/// Compares two byte arrays with early exit optimization when threshold is exceeded.
+/// Compares two byte arrays using optimized block comparison with early exit.
+///
+/// This implementation uses memcmp for block-level comparison which is highly optimized
+/// by the system (often using SIMD instructions). When differences are found within a block,
+/// it counts individual differing bytes only in that block.
 ///
 /// - Parameters:
 ///   - oldBytes: Reference image bytes
@@ -30,18 +37,44 @@ func comparePixelBytes(
     precision: Float
 ) -> (passed: Bool, actualPrecision: Float) {
     let tolerance = max(Float.ulpOfOne, 1.0 / Float(byteCount))
+
+    // Fast path: exact match required - use single memcmp
+    if precision >= 1.0 {
+        let isEqual = memcmp(oldBytes, newBytes, byteCount) == 0
+        return (isEqual, isEqual ? 1.0 : 0.0)
+    }
+
     let maxPassingDifferentByteCount = Int(floor(Float(byteCount) * (1 - precision + tolerance)))
     var differentByteCount = 0
+    var offset = 0
 
-    for offset in 0..<byteCount {
-        if oldBytes[offset] != newBytes[offset] {
-            differentByteCount += 1
+    // Process in blocks for better cache performance
+    while offset < byteCount {
+        let remainingBytes = byteCount - offset
+        let blockSize = min(comparisonBlockSize, remainingBytes)
+
+        // Fast path: check if entire block is identical using memcmp (SIMD optimized)
+        if memcmp(oldBytes + offset, newBytes + offset, blockSize) == 0 {
+            offset += blockSize
+            continue
         }
-        // Early exit if failure is guaranteed even with tolerance
-        if differentByteCount > maxPassingDifferentByteCount {
-            let actualPrecision = 1 - Float(differentByteCount) / Float(byteCount)
-            return (false, actualPrecision)
+
+        // Block has differences - count them individually
+        let blockEnd = offset + blockSize
+        var index = offset
+        while index < blockEnd {
+            if oldBytes[index] != newBytes[index] {
+                differentByteCount += 1
+
+                // Early exit if failure is guaranteed even with tolerance
+                if differentByteCount > maxPassingDifferentByteCount {
+                    let actualPrecision = 1 - Float(differentByteCount) / Float(byteCount)
+                    return (false, actualPrecision)
+                }
+            }
+            index += 1
         }
+        offset += blockSize
     }
 
     let actualPrecision = 1 - Float(differentByteCount) / Float(byteCount)
