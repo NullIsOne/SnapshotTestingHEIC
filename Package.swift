@@ -19,7 +19,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/NullIsOne/swift-snapshot-testing",
-            branch: "fix-precision-tolerance"
+            exact: "1.18.11"
         ),
     ],
     targets: [
