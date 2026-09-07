@@ -19,7 +19,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/NullIsOne/swift-snapshot-testing",
-            branch: "fix-snapshot-assertion-path"
+            exact: "1.18.12"
         ),
     ],
     targets: [

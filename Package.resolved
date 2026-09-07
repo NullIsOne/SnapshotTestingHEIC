@@ -1,5 +1,5 @@
 {
-  "originHash" : "5c1a60a249649a1a41935c3c5746cdad2ce3475735d98829dea09e2800bd471f",
+  "originHash" : "2016a44e9ba791f895d4e32f0b0c54ef49218d28785e87bad563c8f9aaebe504",
   "pins" : [
     {
       "identity" : "swift-custom-dump",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/NullIsOne/swift-snapshot-testing",
       "state" : {
-        "branch" : "fix-precision-tolerance",
-        "revision" : "a823adbe84d344bef54076a10568d992beb7a388"
+        "revision" : "944d82fbff66780546f9972021377822b5bf4e14",
+        "version" : "1.18.12"
       }
     },
     {
